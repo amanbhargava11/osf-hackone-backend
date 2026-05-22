@@ -40,7 +40,7 @@ const createOrder =
       }
 
       const options = {
-        amount: 100,
+        amount: 25000,
         currency: "INR",
 
         receipt:
