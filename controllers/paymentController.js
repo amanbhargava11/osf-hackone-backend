@@ -1,150 +1,105 @@
-
-const Razorpay = require("razorpay");
-
-const crypto = require("crypto");
-
+const axios = require("axios");
 const User = require("../models/User");
-
-const razorpay = new Razorpay({
-  key_id:
-    process.env.RAZORPAY_KEY_ID,
-
-  key_secret:
-    process.env.RAZORPAY_KEY_SECRET,
-});
 
 /* =========================
    CREATE ORDER
 ========================= */
 
-const createOrder =
-  async (req, res) => {
+const createOrder = async (req, res) => {
+  try {
+    const { userId } = req.body;
 
-    try {
+    const user = await User.findById(userId);
 
-      const { userId } =
-        req.body;
-
-      const user =
-        await User.findById(
-          userId
-        );
-
-      if (!user) {
-
-        return res.status(404).json({
-          success: false,
-          message:
-            "User not found",
-        });
-      }
-
-      const options = {
-        amount: 25000,
-        currency: "INR",
-
-        receipt:
-          "receipt_" +
-          Date.now(),
-      };
-
-      const order =
-        await razorpay.orders.create(
-          options
-        );
-
-      res.status(200).json({
-        success: true,
-        order,
-        key:
-          process.env
-            .RAZORPAY_KEY_ID,
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
+    if (!user) {
+      return res.status(404).json({
         success: false,
+        message: "User not found",
       });
     }
-  };
+
+    const response = await axios.post(
+      "https://api.cashfree.com/pg/orders",
+      {
+        order_amount: 250,        // ₹250 (Cashfree rupees mein leta hai, paise nahi)
+        order_currency: "INR",
+        customer_details: {
+          customer_id: userId.toString(),
+          customer_name: user.name || "Participant",
+          customer_email: user.email,
+          customer_phone: user.phone || "9999999999",
+        },
+        order_meta: {
+          return_url:
+            "https://osfhackathon.in/payment-success?order_id={order_id}",
+        },
+        order_note: "OSF HackOne Registration Fee",
+      },
+      {
+        headers: {
+          "x-client-id": process.env.CASHFREE_APP_ID,
+          "x-client-secret": process.env.CASHFREE_SECRET,
+          "x-api-version": "2023-08-01",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      payment_session_id: response.data.payment_session_id,
+      order_id: response.data.order_id,
+    });
+
+  } catch (err) {
+    console.log(err?.response?.data || err);
+    res.status(500).json({ success: false });
+  }
+};
 
 /* =========================
    VERIFY PAYMENT
 ========================= */
 
-const verifyPayment =
-  async (req, res) => {
+const verifyPayment = async (req, res) => {
+  try {
+    const { order_id, userId } = req.body;
 
-    try {
-
-      const {
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        userId,
-      } = req.body;
-
-      const generatedSignature =
-        crypto
-          .createHmac(
-            "sha256",
-            process.env
-              .RAZORPAY_KEY_SECRET
-          )
-          .update(
-            razorpay_order_id +
-            "|" +
-            razorpay_payment_id
-          )
-          .digest("hex");
-
-      if (
-        generatedSignature !==
-        razorpay_signature
-      ) {
-
-        return res.status(400).json({
-          success: false,
-          message:
-            "Payment verification failed",
-        });
+    // Cashfree se order status check karo
+    const response = await axios.get(
+      `https://api.cashfree.com/pg/orders/${order_id}`,
+      {
+        headers: {
+          "x-client-id": process.env.CASHFREE_APP_ID,
+          "x-client-secret": process.env.CASHFREE_SECRET,
+          "x-api-version": "2023-08-01",
+        },
       }
+    );
 
-      await User.findByIdAndUpdate(
-        userId,
-        {
-          isPaid: true,
+    const orderStatus = response.data.order_status;
 
-          paymentId:
-            razorpay_payment_id,
-
-          paymentOrderId:
-            razorpay_order_id,
-
-          paidAt:
-            new Date(),
-        }
-      );
-
-      res.status(200).json({
-        success: true,
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
+    if (orderStatus !== "PAID") {
+      return res.status(400).json({
         success: false,
+        message: "Payment not completed",
       });
     }
-  };
 
-module.exports = {
-  createOrder,
-  verifyPayment,
+    // User update karo
+    await User.findByIdAndUpdate(userId, {
+      isPaid: true,
+      paymentId: response.data.cf_order_id,
+      paymentOrderId: order_id,
+      paidAt: new Date(),
+    });
+
+    res.status(200).json({ success: true });
+
+  } catch (err) {
+    console.log(err?.response?.data || err);
+    res.status(500).json({ success: false });
+  }
 };
 
+module.exports = { createOrder, verifyPayment };
