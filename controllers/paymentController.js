@@ -21,7 +21,7 @@ const createOrder = async (req, res) => {
     const response = await axios.post(
       "https://api.cashfree.com/pg/orders",
       {
-        order_amount: 250,        // ₹250 (Cashfree rupees mein leta hai, paise nahi)
+        order_amount: 250,
         order_currency: "INR",
         customer_details: {
           customer_id: userId.toString(),
@@ -30,8 +30,7 @@ const createOrder = async (req, res) => {
           customer_phone: user.phone || "9999999999",
         },
         order_meta: {
-          return_url:
-            "https://osfhackathon.in/payment-success?order_id={order_id}",
+          return_url: "https://osfhackathon.in/payment-success?order_id={order_id}",
         },
         order_note: "OSF HackOne Registration Fee",
       },
@@ -65,7 +64,6 @@ const verifyPayment = async (req, res) => {
   try {
     const { order_id, userId } = req.body;
 
-    // Cashfree se order status check karo
     const response = await axios.get(
       `https://api.cashfree.com/pg/orders/${order_id}`,
       {
@@ -86,15 +84,22 @@ const verifyPayment = async (req, res) => {
       });
     }
 
-    // User update karo
-    await User.findByIdAndUpdate(userId, {
-      isPaid: true,
-      paymentId: response.data.cf_order_id,
-      paymentOrderId: order_id,
-      paidAt: new Date(),
-    });
+    // { new: true } — updated user return karega
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        isPaid: true,
+        paymentId: response.data.cf_order_id,
+        paymentOrderId: order_id,
+        paidAt: new Date(),
+      },
+      { new: true }
+    );
 
-    res.status(200).json({ success: true });
+    res.status(200).json({
+      success: true,
+      user: updatedUser,  // frontend localStorage update karega
+    });
 
   } catch (err) {
     console.log(err?.response?.data || err);
@@ -102,4 +107,40 @@ const verifyPayment = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, verifyPayment };
+/* =========================
+   MANUAL APPROVE (Admin)
+========================= */
+
+const manualApprove = async (req, res) => {
+  try {
+    const { userEmail, transactionId } = req.body;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { email: userEmail },
+      {
+        isPaid: true,
+        paymentId: transactionId || "MANUAL-" + Date.now(),
+        paidAt: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: updatedUser,
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: false });
+  }
+};
+
+module.exports = { createOrder, verifyPayment, manualApprove };
