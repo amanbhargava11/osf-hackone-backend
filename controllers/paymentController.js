@@ -154,11 +154,11 @@ return res.status(200).json({
   user: updatedUser,
 
 });
-```
+
 
 } catch (err) {
 
-```
+
 console.log(
   err?.response?.data || err
 );
@@ -171,7 +171,7 @@ return res.status(500).json({
     "Payment verification failed",
 
 });
-```
+
 
 }
 
@@ -185,7 +185,7 @@ const manualApprove = async (req, res) => {
 
 try {
 
-```
+
 const {
   userEmail,
   transactionId
