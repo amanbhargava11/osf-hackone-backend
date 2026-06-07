@@ -1,5 +1,5 @@
 // server.js
-
+require("./services/reminderCron");
 require("dotenv").config();
 
 const express = require("express");

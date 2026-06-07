@@ -66,19 +66,41 @@ exports.createTeam =
 
       await user.save();
 
-      await sendEventMail({
-        to: user.email,
+      try {
 
-        subject:
-          "Team Successfully Registered 🎉",
+        await sendEventMail({
 
-        html:
-          teamCreatedEmail({
-            name: user.name,
-            teamName: team.name,
-            teamCode: team.code,
-          }),
-      });
+          to: user.email,
+
+          subject:
+            "Team Successfully Registered 🎉",
+
+          html:
+            teamCreatedEmail({
+
+              name: user.name,
+
+              teamName: team.name,
+
+              teamCode: team.code,
+
+            }),
+
+        });
+
+        console.log(
+          "✅ Team email sent"
+        );
+
+      } catch (mailError) {
+
+        console.log(
+          "❌ Team email failed"
+        );
+
+        console.log(mailError);
+
+      }
 
       res.json({
         success: true,

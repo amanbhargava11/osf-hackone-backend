@@ -62,108 +62,232 @@ const createOrder = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
-
 /* =========================
-   VERIFY PAYMENT
+VERIFY PAYMENT
 ========================= */
 
 const verifyPayment = async (req, res) => {
-  try {
-    const { order_id, userId } = req.body;
 
-    const response = await axios.get(
-      `https://api.cashfree.com/pg/orders/${order_id}`,
-      {
-        headers: {
-          "x-client-id": process.env.CASHFREE_APP_ID,
-          "x-client-secret": process.env.CASHFREE_SECRET,
-          "x-api-version": "2023-08-01",
-        },
-      }
-    );
+try {
 
-    const orderStatus = response.data.order_status;
 
-    if (orderStatus !== "PAID") {
-      return res.status(400).json({
-        success: false,
-        message: "Payment not completed",
-      });
-    }
+const { order_id, userId } = req.body;
 
-    // { new: true } — updated user return karega
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        isPaid: true,
-        paymentId: response.data.cf_order_id,
-        paymentOrderId: order_id,
-        paidAt: new Date(),
-      },
-      { new: true }
-    );
-
-    await sendEventMail({
-  to: updatedUser.email,
-
-  subject:
-   "Payment Confirmed ✅ Welcome to OSF HACKONE 2K26",
-
-  html:
-   paymentSuccessEmail({
-      name:
-        updatedUser.name,
-
-      paymentId:
-        response.data.cf_order_id,
-   }),
-});
-
-    res.status(200).json({
-      success: true,
-      user: updatedUser,  // frontend localStorage update karega
-    });
-
-  } catch (err) {
-    console.log(err?.response?.data || err);
-    res.status(500).json({ success: false });
+const response = await axios.get(
+  `https://api.cashfree.com/pg/orders/${order_id}`,
+  {
+    headers: {
+      "x-client-id": process.env.CASHFREE_APP_ID,
+      "x-client-secret": process.env.CASHFREE_SECRET,
+      "x-api-version": "2023-08-01",
+    },
   }
+);
+
+const orderStatus = response.data.order_status;
+
+if (orderStatus !== "PAID") {
+
+  return res.status(400).json({
+    success: false,
+    message: "Payment not completed",
+  });
+
+}
+
+const updatedUser =
+  await User.findByIdAndUpdate(
+    userId,
+    {
+      isPaid: true,
+      paymentId: response.data.cf_order_id,
+      paymentOrderId: order_id,
+      paidAt: new Date(),
+    },
+    { new: true }
+  );
+
+/* =========================
+   PAYMENT SUCCESS EMAIL
+========================= */
+
+try {
+
+  await sendEventMail({
+
+    to: updatedUser.email,
+
+    subject:
+      "Payment Confirmed ✅ Welcome to OSF HACKONE 2K26",
+
+    html:
+      paymentSuccessEmail({
+
+        name:
+          updatedUser.name,
+
+        paymentId:
+          response.data.cf_order_id,
+
+      }),
+
+  });
+
+  console.log(
+    "✅ Payment confirmation email sent"
+  );
+
+} catch (mailError) {
+
+  console.log(
+    "❌ Payment email failed"
+  );
+
+  console.log(mailError);
+
+}
+
+return res.status(200).json({
+
+  success: true,
+
+  user: updatedUser,
+
+});
+```
+
+} catch (err) {
+
+```
+console.log(
+  err?.response?.data || err
+);
+
+return res.status(500).json({
+
+  success: false,
+
+  message:
+    "Payment verification failed",
+
+});
+```
+
+}
+
 };
 
 /* =========================
-   MANUAL APPROVE (Admin)
+MANUAL APPROVE (Admin)
 ========================= */
 
 const manualApprove = async (req, res) => {
-  try {
-    const { userEmail, transactionId } = req.body;
 
-    const updatedUser = await User.findOneAndUpdate(
-      { email: userEmail },
-      {
-        isPaid: true,
-        paymentId: transactionId || "MANUAL-" + Date.now(),
-        paidAt: new Date(),
-      },
-      { new: true }
-    );
+try {
 
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+```
+const {
+  userEmail,
+  transactionId
+} = req.body;
+
+const updatedUser =
+  await User.findOneAndUpdate(
+    {
+      email: userEmail,
+    },
+    {
+      isPaid: true,
+      paymentId:
+        transactionId ||
+        "MANUAL-" + Date.now(),
+
+      paidAt: new Date(),
+    },
+    {
+      new: true,
     }
+  );
 
-    res.status(200).json({
-      success: true,
-      user: updatedUser,
-    });
+if (!updatedUser) {
 
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ success: false });
-  }
+  return res.status(404).json({
+    success: false,
+    message: "User not found",
+  });
+
+}
+
+/* =========================
+   SEND PAYMENT EMAIL
+========================= */
+
+try {
+
+  await sendEventMail({
+
+    to:
+      updatedUser.email,
+
+    subject:
+      "Payment Confirmed ✅ Welcome to OSF HACKONE 2K26",
+
+    html:
+      paymentSuccessEmail({
+
+        name:
+          updatedUser.name,
+
+        paymentId:
+          updatedUser.paymentId,
+
+      }),
+
+  });
+
+  console.log(
+    "✅ Manual payment email sent"
+  );
+
+} catch (mailError) {
+
+  console.log(
+    "❌ Manual payment email failed"
+  );
+
+  console.log(mailError);
+
+}
+
+return res.status(200).json({
+
+  success: true,
+
+  user: updatedUser,
+
+});
+
+} catch (err) {
+
+
+console.log(err);
+
+return res.status(500).json({
+
+  success: false,
+
+  message:
+    "Manual approval failed",
+
+});
+
+
+}
+
 };
 
-module.exports = { createOrder, verifyPayment, manualApprove };
+module.exports = {
+createOrder,
+verifyPayment,
+manualApprove,
+};

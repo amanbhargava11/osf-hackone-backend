@@ -16,7 +16,7 @@ SEND ADMIN OTP
 exports.sendAdminOTP =
 async (req, res) => {
 
-```
+
 try {
 
   const { email } =
@@ -58,7 +58,7 @@ try {
   });
 
 }
-```
+
 
 };
 
@@ -69,7 +69,7 @@ VERIFY ADMIN OTP
 exports.verifyAdminOTP =
 async (req, res) => {
 
-```
+
 try {
 
   const {
@@ -134,7 +134,7 @@ try {
   });
 
 }
-```
+
 
 };
 
@@ -151,6 +151,10 @@ exports.sendBulkMail = async (req, res) => {
       message,
       target
     } = req.body;
+
+    console.log("📧 BULK MAIL API HIT");
+console.log("Subject:", subject);
+console.log("Target:", target);
 
     if (!subject || !message) {
 
@@ -173,6 +177,8 @@ exports.sendBulkMail = async (req, res) => {
         .select("name email");
 
     }
+
+    
 
     /* =========================
        PAID PARTICIPANTS
