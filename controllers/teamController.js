@@ -1,80 +1,101 @@
 const Team = require("../models/Team");
 const User = require("../models/User");
 
+
+const sendEventMail =
+  require("../utils/sendEventMail");
+
+const teamCreatedEmail =
+  require("../templates/teamCreatedEmail");
+
 /* =========================
    CREATE TEAM
 ========================= */
 
 exports.createTeam =
-    async (req, res) => {
+  async (req, res) => {
 
-        try {
+    try {
 
-            const {
-                userId,
-                teamName,
-            } = req.body;
+      const {
+        userId,
+        teamName,
+      } = req.body;
 
-            const user =
-                await User.findById(
-                    userId
-                );
+      const user =
+        await User.findById(
+          userId
+        );
 
-            if (!user) {
+      if (!user) {
 
-                return res.status(404).json({
-                    success: false,
-                    message:
-                        "User not found",
-                });
-            }
+        return res.status(404).json({
+          success: false,
+          message:
+            "User not found",
+        });
+      }
 
-            if (user.teamId) {
+      if (user.teamId) {
 
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Already in team",
-                });
-            }
+        return res.status(400).json({
+          success: false,
+          message:
+            "Already in team",
+        });
+      }
 
-            const code =
-                Math.random()
-                    .toString(36)
-                    .substring(2, 8)
-                    .toUpperCase();
+      const code =
+        Math.random()
+          .toString(36)
+          .substring(2, 8)
+          .toUpperCase();
 
-            const team =
-                await Team.create({
-                    name: teamName,
-                    code,
-                    theme: user.theme,
-                    problemStatement:
-                        user.problemStatement,
-                    members: [user._id],
-                });
+      const team =
+        await Team.create({
+          name: teamName,
+          code,
+          theme: user.theme,
+          problemStatement:
+            user.problemStatement,
+          members: [user._id],
+        });
 
-            user.teamId = team.code;
-            user.teamRole = "leader";
+      user.teamId = team.code;
+      user.teamRole = "leader";
 
-            await user.save();
+      await user.save();
 
-            res.json({
-                success: true,
-                team,
-                user,
-            });
+      await sendEventMail({
+        to: user.email,
 
-        } catch (err) {
+        subject:
+          "Team Successfully Registered 🎉",
 
-            console.log(err);
+        html:
+          teamCreatedEmail({
+            name: user.name,
+            teamName: team.name,
+            teamCode: team.code,
+          }),
+      });
 
-            res.status(500).json({
-                success: false,
-                message: err.message,
-            });
-        }
-    };
+      res.json({
+        success: true,
+        team,
+        user,
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
+  };
 
 /* =========================
    JOIN TEAM
@@ -325,33 +346,33 @@ exports.getAllTeams = async (req, res) => {
 ========================= */
 
 exports.getLeaderboard =
-    async (req, res) => {
+  async (req, res) => {
 
-        try {
+    try {
 
-            const teams =
-                await Team.find()
-                    .populate("members")
-                    .sort({
-                        createdAt: 1,
-                    });
+      const teams =
+        await Team.find()
+          .populate("members")
+          .sort({
+            createdAt: 1,
+          });
 
-            res.json({
-                success: true,
-                teams,
-            });
+      res.json({
+        success: true,
+        teams,
+      });
 
-        } catch (err) {
+    } catch (err) {
 
-            console.log(err);
+      console.log(err);
 
-            res.status(500).json({
-                success: false,
-                message:
-                    err.message,
-            });
-        }
-    };
+      res.status(500).json({
+        success: false,
+        message:
+          err.message,
+      });
+    }
+  };
 
 
 /* =========================
@@ -359,82 +380,82 @@ exports.getLeaderboard =
 ========================= */
 
 exports.leaveTeam = async (req, res) => {
-    try {
+  try {
 
-        const { userId } = req.body;
+    const { userId } = req.body;
 
-        const user =
-            await User.findById(userId);
+    const user =
+      await User.findById(userId);
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        if (!user.teamId) {
-            return res.status(400).json({
-                success: false,
-                message: "User is not in any team",
-            });
-        }
-
-        const team =
-            await Team.findOne({
-                code: user.teamId,
-            });
-
-        if (!team) {
-            return res.status(404).json({
-                success: false,
-                message: "Team not found",
-            });
-        }
-
-        /* REMOVE MEMBER */
-
-        team.members =
-            team.members.filter(
-                (memberId) =>
-                    memberId.toString() !==
-                    user._id.toString()
-            );
-
-        /* DELETE TEAM IF EMPTY */
-
-        if (team.members.length === 0) {
-
-            await Team.deleteOne({
-                _id: team._id,
-            });
-
-        } else {
-
-            await team.save();
-        }
-
-        /* RESET USER */
-
-        user.teamId = null;
-        user.teamRole = null;
-
-        await user.save();
-
-        res.json({
-            success: true,
-            user,
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        res.status(500).json({
-            success: false,
-            message: err.message,
-        });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
+
+    if (!user.teamId) {
+      return res.status(400).json({
+        success: false,
+        message: "User is not in any team",
+      });
+    }
+
+    const team =
+      await Team.findOne({
+        code: user.teamId,
+      });
+
+    if (!team) {
+      return res.status(404).json({
+        success: false,
+        message: "Team not found",
+      });
+    }
+
+    /* REMOVE MEMBER */
+
+    team.members =
+      team.members.filter(
+        (memberId) =>
+          memberId.toString() !==
+          user._id.toString()
+      );
+
+    /* DELETE TEAM IF EMPTY */
+
+    if (team.members.length === 0) {
+
+      await Team.deleteOne({
+        _id: team._id,
+      });
+
+    } else {
+
+      await team.save();
+    }
+
+    /* RESET USER */
+
+    user.teamId = null;
+    user.teamRole = null;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      user,
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
 
 /* =========================
@@ -442,39 +463,39 @@ exports.leaveTeam = async (req, res) => {
 ========================= */
 
 exports.getTeam =
-    async (req, res) => {
+  async (req, res) => {
 
-        try {
+    try {
 
-            const { code } =
-                req.params;
+      const { code } =
+        req.params;
 
-            const team =
-                await Team.findOne({
-                    code,
-                }).populate("members");
+      const team =
+        await Team.findOne({
+          code,
+        }).populate("members");
 
-            if (!team) {
+      if (!team) {
 
-                return res.status(404).json({
-                    success: false,
-                    message:
-                        "Team not found",
-                });
-            }
+        return res.status(404).json({
+          success: false,
+          message:
+            "Team not found",
+        });
+      }
 
-            res.json({
-                success: true,
-                team,
-            });
+      res.json({
+        success: true,
+        team,
+      });
 
-        } catch (err) {
+    } catch (err) {
 
-            console.log(err);
+      console.log(err);
 
-            res.status(500).json({
-                success: false,
-                message: err.message,
-            });
-        }
-    };
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
+  };

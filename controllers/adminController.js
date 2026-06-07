@@ -1,122 +1,348 @@
+const User = require("../models/User");
+
 const sendOtpMail =
-    require("../utils/sendMail");
+require("../utils/sendMail");
+
+const sendEventMail =
+require("../utils/sendEventMail");
 
 const adminOtps =
-    require("../utils/adminOtpStore");
+require("../utils/adminOtpStore");
+
+/* =========================
+SEND ADMIN OTP
+========================= */
 
 exports.sendAdminOTP =
-    async (req, res) => {
+async (req, res) => {
 
-        try {
+```
+try {
 
-            const { email } =
-                req.body;
+  const { email } =
+    req.body;
 
-            const otp =
-                Math.floor(
-                    100000 +
-                    Math.random() * 900000
-                ).toString();
+  const otp =
+    Math.floor(
+      100000 +
+      Math.random() * 900000
+    ).toString();
 
-            adminOtps[email] = {
-                otp,
-                expires:
-                    Date.now() +
-                    5 * 60 * 1000,
-            };
+  adminOtps[email] = {
+    otp,
+    expires:
+      Date.now() +
+      5 * 60 * 1000,
+  };
 
-            await sendOtpMail(
-                email,
-                otp,
-                "admin-login"
-            );
+  await sendOtpMail(
+    email,
+    otp,
+    "admin-login"
+  );
 
-            res.json({
-                success: true,
-                message:
-                    "OTP sent successfully",
-            });
+  res.json({
+    success: true,
+    message:
+      "OTP sent successfully",
+  });
 
-        } catch (error) {
+} catch (error) {
 
-            console.log(error);
+  console.log(error);
 
-            res.status(500).json({
-                success: false,
-                message:
-                    "Failed to send OTP",
-            });
+  res.status(500).json({
+    success: false,
+    message:
+      "Failed to send OTP",
+  });
 
-        }
+}
+```
 
-    };
+};
+
+/* =========================
+VERIFY ADMIN OTP
+========================= */
 
 exports.verifyAdminOTP =
-    async (req, res) => {
+async (req, res) => {
 
-        try {
+```
+try {
 
-            const {
-                email,
-                otp
-            } = req.body;
+  const {
+    email,
+    otp
+  } = req.body;
 
-            const stored =
-                adminOtps[email];
+  const stored =
+    adminOtps[email];
 
-            if (!stored) {
+  if (!stored) {
 
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "OTP not found",
-                });
+    return res.status(400).json({
+      success: false,
+      message:
+        "OTP not found",
+    });
 
-            }
+  }
 
-            if (
-                Date.now() >
-                stored.expires
-            ) {
+  if (
+    Date.now() >
+    stored.expires
+  ) {
 
-                delete adminOtps[email];
+    delete adminOtps[email];
 
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "OTP expired",
-                });
+    return res.status(400).json({
+      success: false,
+      message:
+        "OTP expired",
+    });
 
-            }
+  }
 
-            if (
-                stored.otp !== otp
-            ) {
+  if (
+    stored.otp !== otp
+  ) {
 
-                return res.status(401).json({
-                    success: false,
-                    message:
-                        "Invalid OTP",
-                });
+    return res.status(401).json({
+      success: false,
+      message:
+        "Invalid OTP",
+    });
 
-            }
+  }
 
-            delete adminOtps[email];
+  delete adminOtps[email];
 
-            res.json({
-                success: true,
-                message:
-                    "OTP verified",
-            });
+  res.json({
+    success: true,
+    message:
+      "OTP verified",
+  });
 
-        } catch (error) {
+} catch (error) {
 
-            console.log(error);
+  console.log(error);
 
-            res.status(500).json({
-                success: false,
-            });
+  res.status(500).json({
+    success: false,
+  });
 
-        }
+}
+```
 
-    };
+};
+
+/* =========================
+SEND BULK MAIL
+========================= */
+
+exports.sendBulkMail = async (req, res) => {
+
+  try {
+
+    const {
+      subject,
+      message,
+      target
+    } = req.body;
+
+    if (!subject || !message) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Subject and message are required",
+      });
+
+    }
+
+    let users = [];
+
+    /* =========================
+       ALL PARTICIPANTS
+    ========================= */
+
+    if (target === "all") {
+
+      users = await User.find({})
+        .select("name email");
+
+    }
+
+    /* =========================
+       PAID PARTICIPANTS
+    ========================= */
+
+    else if (target === "paid") {
+
+      users = await User.find({
+        isPaid: true,
+      }).select("name email");
+
+    }
+
+    /* =========================
+       UNPAID PARTICIPANTS
+    ========================= */
+
+    else if (target === "unpaid") {
+
+      users = await User.find({
+        isPaid: false,
+      }).select("name email");
+
+    }
+
+    /* =========================
+       TEAM LEADERS
+    ========================= */
+
+    else if (target === "leaders") {
+
+      users = await User.find({
+        teamRole: "leader",
+      }).select("name email");
+
+    }
+
+    /* =========================
+       TEAM MEMBERS
+    ========================= */
+
+    else if (target === "members") {
+
+      users = await User.find({
+        teamRole: "member",
+      }).select("name email");
+
+    }
+
+    else {
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid target selected",
+      });
+
+    }
+
+    if (!users.length) {
+
+      return res.status(404).json({
+        success: false,
+        message: "No users found for selected target",
+      });
+
+    }
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const user of users) {
+
+      try {
+
+        await sendEventMail({
+
+          to: user.email,
+
+          subject,
+
+          html: `
+            <div style="
+              max-width:700px;
+              margin:auto;
+              background:#ffffff;
+              font-family:Arial,sans-serif;
+              padding:30px;
+            ">
+
+              <h1 style="
+                color:#06b6d4;
+                margin-bottom:20px;
+              ">
+                OSF HACKONE 2K26
+              </h1>
+
+              <p>
+                Hello <strong>${user.name}</strong>,
+              </p>
+
+              <div style="
+                font-size:15px;
+                line-height:1.8;
+                color:#333;
+              ">
+                ${message}
+              </div>
+
+              <br>
+
+              <hr>
+
+              <p style="
+                color:#666;
+                font-size:14px;
+              ">
+                Team OSF HackOne
+                <br/>
+                National Level Hackathon 2026
+              </p>
+
+            </div>
+          `,
+
+        });
+
+        successCount++;
+
+      } catch (mailError) {
+
+        console.log(
+          "❌ Mail failed:",
+          user.email
+        );
+
+        failedCount++;
+
+      }
+
+    }
+
+    return res.status(200).json({
+
+      success: true,
+
+      target,
+
+      totalUsers: users.length,
+
+      mailsSent: successCount,
+
+      mailsFailed: failedCount,
+
+      message:
+        `Successfully sent ${successCount} emails`,
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+
+      success: false,
+
+      message: error.message,
+
+    });
+
+  }
+
+};

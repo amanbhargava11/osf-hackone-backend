@@ -7,9 +7,12 @@ const router =
 const {
   sendAdminOTP,
   verifyAdminOTP,
+  sendBulkMail,
 } = require(
   "../controllers/adminController"
 );
+
+
 
 router.post(
   "/send-admin-otp",
@@ -19,6 +22,11 @@ router.post(
 router.post(
   "/verify-admin-otp",
   verifyAdminOTP
+);
+
+router.post(
+  "/send-bulk-mail",
+  sendBulkMail
 );
 
 module.exports = router;

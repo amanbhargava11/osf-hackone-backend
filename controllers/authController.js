@@ -7,6 +7,12 @@ const jwt = require("jsonwebtoken");
 const sendOtpMail =
   require("../utils/sendMail");
 
+const sendEventMail =
+  require("../utils/sendEventMail");
+
+const welcomeEmail =
+  require("../templates/welcomeEmail");
+
 /* =========================
    OTP STORE
 ========================= */
@@ -80,10 +86,10 @@ exports.sendOtp = async (
     ========================= */
 
     await sendOtpMail(
-  email,
-  otp,
-  "verification"
-);
+      email,
+      otp,
+      "verification"
+    );
 
     console.log(
       "✅ OTP:",
@@ -239,6 +245,19 @@ exports.registerUser =
           linkedinUrl,
         });
 
+      await sendEventMail({
+        to: user.email,
+        subject:
+          "Welcome to OSF HACKONE 2K26 🚀",
+
+        html: welcomeEmail({
+          name: user.name,
+          theme: user.theme,
+        }),
+      });
+
+
+
       /* =========================
          DELETE OTP
       ========================= */
@@ -390,8 +409,8 @@ exports.loginUser =
     }
   };
 
-  /* =========================
-   GET ALL USERS
+/* =========================
+ GET ALL USERS
 ========================= */
 
 exports.getAllUsers =

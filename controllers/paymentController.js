@@ -1,6 +1,13 @@
 const axios = require("axios");
 const User = require("../models/User");
 
+
+const sendEventMail =
+require("../utils/sendEventMail");
+
+const paymentSuccessEmail =
+require("../templates/paymentSuccessEmail");
+
 /* =========================
    CREATE ORDER
 ========================= */
@@ -95,6 +102,22 @@ const verifyPayment = async (req, res) => {
       },
       { new: true }
     );
+
+    await sendEventMail({
+  to: updatedUser.email,
+
+  subject:
+   "Payment Confirmed ✅ Welcome to OSF HACKONE 2K26",
+
+  html:
+   paymentSuccessEmail({
+      name:
+        updatedUser.name,
+
+      paymentId:
+        response.data.cf_order_id,
+   }),
+});
 
     res.status(200).json({
       success: true,
