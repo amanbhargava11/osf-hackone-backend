@@ -118,198 +118,154 @@ exports.sendOtp = async (
    REGISTER USER
 ========================= */
 
-exports.registerUser =
-  async (req, res) => {
-
-    try {
-
-      const {
-        name,
-        email,
-        password,
-        phone,
-        college,
-        gender,
-        theme,
-        problemStatement,
-        yearOfStudy,
-        githubUrl,
-        linkedinUrl,
-        otp,
-      } = req.body;
-
-      /* =========================
-         CHECK EXISTING USER
-      ========================= */
-
-      const existingUser =
-        await User.findOne({
-          email,
-        });
-
-      if (existingUser) {
-
-        return res.status(400).json({
-          success: false,
-          message:
-            "Email already registered",
-        });
-      }
-
-      /* =========================
-         CHECK OTP
-      ========================= */
-
-      const savedOtp =
-        otpStore[email];
-
-      if (!savedOtp) {
-
-        return res.status(400).json({
-          success: false,
-          message:
-            "OTP not found",
-        });
-      }
-
-      /* =========================
-         CHECK OTP EXPIRY
-      ========================= */
-
-      if (
-        Date.now() >
-        savedOtp.expiresAt
-      ) {
-
-        delete otpStore[email];
-
-        return res.status(400).json({
-          success: false,
-          message:
-            "OTP expired",
-        });
-      }
-
-      /* =========================
-         VERIFY OTP
-      ========================= */
-
-      if (
-        String(savedOtp.otp)
-          .trim() !==
-        String(otp).trim()
-      ) {
-
-        return res.status(400).json({
-          success: false,
-          message:
-            "Invalid OTP",
-        });
-      }
-
-      /* =========================
-         HASH PASSWORD
-      ========================= */
-
-      const hashedPassword =
-        await bcrypt.hash(
-          password,
-          10
-        );
-
-      /* =========================
-         CREATE USER
-      ========================= */
-
-      const user =
-        await User.create({
-
-          name,
-          email,
-
-          password:
-            hashedPassword,
-
-          phone,
-          college,
-          gender,
-
-          theme,
-
-          problemStatement,
-
-          yearOfStudy,
-
-          githubUrl,
-
-          linkedinUrl,
-        });
-
-      await sendEventMail({
-        to: user.email,
-        subject:
-          "Welcome to OSF HACKONE 2K26 🚀",
-
-        html: welcomeEmail({
-          name: user.name,
-          theme: user.theme,
-        }),
-      });
+exports.registerUser = async (req, res) => {
+  try {
 
 
+    const {
+      name,
+      email,
+      password,
+      phone,
+      college,
+      gender,
+      theme,
+      problemStatement,
+      yearOfStudy,
+      githubUrl,
+      linkedinUrl,
+      otp,
+    } = req.body;
 
-      /* =========================
-         DELETE OTP
-      ========================= */
+    /* CHECK EXISTING USER */
 
-      delete otpStore[email];
+    const existingUser = await User.findOne({
+      email,
+    });
 
-      /* =========================
-         GENERATE JWT
-      ========================= */
-
-      const token =
-        jwt.sign(
-          {
-            id:
-              user._id,
-          },
-
-          process.env
-            .JWT_SECRET,
-
-          {
-            expiresIn:
-              "7d",
-          }
-        );
-
-      /* =========================
-         RESPONSE
-      ========================= */
-
-      res.status(201).json({
-        success: true,
-
-        message:
-          "Registration successful",
-
-        token,
-
-        user,
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
+    if (existingUser) {
+      return res.status(400).json({
         success: false,
-        message:
-          err.message,
+        message: "Email already registered",
       });
     }
-  };
+
+    /* CHECK OTP */
+
+    const savedOtp = otpStore[email];
+
+    if (!savedOtp) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP not found",
+      });
+    }
+
+    /* CHECK OTP EXPIRY */
+
+    if (Date.now() > savedOtp.expiresAt) {
+      delete otpStore[email];
+
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired",
+      });
+    }
+
+    /* VERIFY OTP */
+
+    if (
+      String(savedOtp.otp).trim() !==
+      String(otp).trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    /* HASH PASSWORD */
+
+    const hashedPassword = await bcrypt.hash(
+      password,
+      10
+    );
+
+    /* CREATE USER */
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      college,
+      gender,
+      theme,
+      problemStatement,
+      yearOfStudy,
+      githubUrl,
+      linkedinUrl,
+    });
+
+    /* DELETE OTP */
+
+    delete otpStore[email];
+
+    /* GENERATE JWT */
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    /* SEND RESPONSE IMMEDIATELY */
+
+    res.status(201).json({
+      success: true,
+      message: "Registration successful",
+      token,
+      user,
+    });
+
+    /* SEND EMAIL IN BACKGROUND */
+
+    sendEventMail({
+      to: user.email,
+      subject: "Welcome to OSF HACKONE 2K26 🚀",
+      html: welcomeEmail({
+        name: user.name,
+        theme: user.theme,
+      }),
+    }).catch((err) => {
+      console.log(
+        "Welcome email error:",
+        err
+      );
+    });
+
+
+  } catch (err) {
+
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+
+
+  }
+};
+
+
+
+
 
 /* =========================
    LOGIN USER
