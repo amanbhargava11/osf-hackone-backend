@@ -102,7 +102,7 @@ module.exports = ({ name, paymentId }) => `
                   <div style="width:28px;height:28px;background-color:#22c55e;border-radius:50%;text-align:center;line-height:28px;font-size:12px;font-weight:700;color:#ffffff;font-family:arial,helvetica,sans-serif;">3</div>
                 </td>
                 <td valign="middle">
-                  <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:14px;color:#4a5568;line-height:1.6;"><strong style="color:#1a2e5a;">Prepare Your PPT</strong> — Max 6 slides, submit before <strong style="color:#dc2626;">15 June 2026</strong>.</p>
+                  <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:14px;color:#4a5568;line-height:1.6;"><strong style="color:#1a2e5a;">Prepare Your PPT</strong> — Max 6 slides, submit before <strong style="color:#dc2626;">26 June 2026</strong>.</p>
                 </td>
               </tr>
             </table>
