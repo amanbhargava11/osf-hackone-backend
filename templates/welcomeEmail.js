@@ -57,7 +57,7 @@ module.exports = ({ name, theme }) => `
               <tr>
                 <td width="48%" valign="top" style="background-color:#f0f7ff;border-left:3px solid #1565C0;border-radius:10px;padding:14px 16px;">
                   <p style="margin:0 0 3px 0;font-family:arial,helvetica,sans-serif;font-size:11px;font-weight:700;color:#1565C0;text-transform:uppercase;letter-spacing:1px;">📅 Submission Deadline</p>
-                  <p style="margin:0 0 2px 0;font-family:arial,helvetica,sans-serif;font-size:16px;font-weight:700;color:#1a2e5a;">15 June 2026</p>
+                  <p style="margin:0 0 2px 0;font-family:arial,helvetica,sans-serif;font-size:16px;font-weight:700;color:#1a2e5a;">26 June 2026</p>
                   <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:12px;color:#718096;">Don't miss the deadline!</p>
                 </td>
                 <td width="4%"></td>
@@ -93,7 +93,7 @@ module.exports = ({ name, theme }) => `
               <tr>
                 <td style="padding:14px 18px;">
                   <p style="margin:0 0 6px 0;font-family:arial,helvetica,sans-serif;font-size:14px;font-weight:700;color:#92400e;">⚠️ PPT Submission Reminder</p>
-                  <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:13px;color:#78350f;line-height:1.7;">Submit your <strong>PPT (Max 6 Slides)</strong> before <strong>15 June 2026</strong>. Cover: Problem Statement, Solution, Tech Stack, Team &amp; Roadmap. <strong>Late submissions not accepted.</strong></p>
+                  <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:13px;color:#78350f;line-height:1.7;">Submit your <strong>PPT (Max 6 Slides)</strong> before <strong>26 June 2026</strong>. Cover: Problem Statement, Solution, Tech Stack, Team &amp; Roadmap. <strong>Late submissions not accepted.</strong></p>
                 </td>
               </tr>
             </table>
@@ -205,7 +205,7 @@ module.exports = ({ name, theme }) => `
               <tr>
                 <td width="48%" valign="top" style="background-color:#f0f7ff;border-left:3px solid #1565C0;border-radius:10px;padding:14px 16px;">
                   <p style="margin:0 0 3px 0;font-family:arial,helvetica,sans-serif;font-size:11px;font-weight:700;color:#1565C0;text-transform:uppercase;letter-spacing:1px;">📅 Submission Deadline</p>
-                  <p style="margin:0 0 2px 0;font-family:arial,helvetica,sans-serif;font-size:16px;font-weight:700;color:#1a2e5a;">15 June 2026</p>
+                  <p style="margin:0 0 2px 0;font-family:arial,helvetica,sans-serif;font-size:16px;font-weight:700;color:#1a2e5a;">26 June 2026</p>
                   <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:12px;color:#718096;">Don't miss the deadline!</p>
                 </td>
                 <td width="4%"></td>
@@ -241,7 +241,7 @@ module.exports = ({ name, theme }) => `
               <tr>
                 <td style="padding:14px 18px;">
                   <p style="margin:0 0 6px 0;font-family:arial,helvetica,sans-serif;font-size:14px;font-weight:700;color:#92400e;">⚠️ PPT Submission Reminder</p>
-                  <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:13px;color:#78350f;line-height:1.7;">Submit your <strong>PPT (Max 6 Slides)</strong> before <strong>15 June 2026</strong>. Cover: Problem Statement, Solution, Tech Stack, Team &amp; Roadmap. <strong>Late submissions not accepted.</strong></p>
+                  <p style="margin:0;font-family:arial,helvetica,sans-serif;font-size:13px;color:#78350f;line-height:1.7;">Submit your <strong>PPT (Max 6 Slides)</strong> before <strong>26 June 2026</strong>. Cover: Problem Statement, Solution, Tech Stack, Team &amp; Roadmap. <strong>Late submissions not accepted.</strong></p>
                 </td>
               </tr>
             </table>
