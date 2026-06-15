@@ -229,14 +229,18 @@ exports.joinTeam =
       await team.save();
 
       /* =========================
-         UPDATE USER
+       UPDATE USER
       ========================= */
 
-      user.teamId =
-        team.code;
+      user.teamId = team.code;
 
-      user.teamRole =
-        "member";
+      user.teamRole = "member";
+
+      /* TEAM TRACK INHERIT */
+      user.theme = team.theme;
+
+      user.problemStatement =
+        team.problemStatement;
 
       await user.save();
 
