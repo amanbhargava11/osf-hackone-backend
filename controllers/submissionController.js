@@ -1,3 +1,6 @@
+const supabase = require("../config/supabase");
+const path = require("path");
+
 const Submission =
   require("../models/Submission");
 
@@ -35,11 +38,44 @@ exports.createSubmission =
 
       /* FILE DETAILS */
 
-      const fileName =
-        req.file.originalname;
+      const fileName = req.file.originalname;
+
+      const fileBuffer =
+        fs.readFileSync(req.file.path);
+
+      const uniqueFileName =
+        `${Date.now()}-${fileName}`;
+
+      const { error } =
+        await supabase.storage
+          .from("submissions")
+          .upload(
+            uniqueFileName,
+            fileBuffer,
+            {
+              contentType:
+                req.file.mimetype,
+            }
+          );
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const { data } =
+        supabase.storage
+          .from("submissions")
+          .getPublicUrl(
+            uniqueFileName
+          );
 
       const fileUrl =
-        req.file.path;
+        data.publicUrl;
+
+
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
 
       /* FIND EXISTING */
 
@@ -54,50 +90,28 @@ exports.createSubmission =
 
       if (existing) {
 
-        /* DELETE OLD FILE */
+        existing.title = title;
 
-        if (
-          existing.fileUrl &&
-          fs.existsSync(
-            existing.fileUrl
-          )
-        ) {
+        existing.desc = desc;
 
-          fs.unlinkSync(
-            existing.fileUrl
-          );
-        }
+        existing.githubUrl = githubUrl;
 
-        existing.title =
-          title;
+        existing.videoUrl = videoUrl;
 
-        existing.desc =
-          desc;
+        existing.fileName = fileName;
 
-        existing.githubUrl =
-          githubUrl;
+        existing.fileUrl = fileUrl;
 
-        existing.videoUrl =
-          videoUrl;
-
-        existing.fileName =
-          fileName;
-
-        existing.fileUrl =
-          fileUrl;
-
-        existing.teamId =
-          teamId;
+        existing.teamId = teamId;
 
         await existing.save();
 
         return res.json({
           success: true,
-          message:
-            "Submission updated successfully",
-          submission:
-            existing,
+          message: "Submission updated successfully",
+          submission: existing,
         });
+
       }
 
       /* =========================
@@ -188,9 +202,9 @@ exports.getAllSubmissions =
 
       const submissions =
         await Submission.find()
-        .sort({
-          createdAt: -1,
-        });
+          .sort({
+            createdAt: -1,
+          });
 
       return res.json({
         success: true,
@@ -237,17 +251,7 @@ exports.deleteSubmission =
 
       /* DELETE FILE */
 
-      if (
-        submission.fileUrl &&
-        fs.existsSync(
-          submission.fileUrl
-        )
-      ) {
 
-        fs.unlinkSync(
-          submission.fileUrl
-        );
-      }
 
       /* DELETE DB ENTRY */
 
