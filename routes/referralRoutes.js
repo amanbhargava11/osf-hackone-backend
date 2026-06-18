@@ -9,6 +9,7 @@ const authMiddleware =
 
 const {
   getMyReferral,
+  generateReferralCode,
 } = require(
   "../controllers/referralController"
 );
@@ -17,6 +18,12 @@ router.get(
   "/me",
   authMiddleware,
   getMyReferral
+);
+
+router.post(
+  "/generate",
+  authMiddleware,
+  generateReferralCode
 );
 
 module.exports =
