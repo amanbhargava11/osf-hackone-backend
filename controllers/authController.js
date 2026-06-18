@@ -13,6 +13,9 @@ const sendEventMail =
 const welcomeEmail =
   require("../templates/welcomeEmail");
 
+const Referral =
+  require("../models/Referral");
+
 /* =========================
    OTP STORE
 ========================= */
@@ -135,6 +138,7 @@ exports.registerUser = async (req, res) => {
       githubUrl,
       linkedinUrl,
       otp,
+      referredBy,
     } = req.body;
 
     /* CHECK EXISTING USER */
@@ -191,6 +195,25 @@ exports.registerUser = async (req, res) => {
       10
     );
 
+    if (referredBy) {
+
+      const referrer =
+        await User.findOne({
+          referralCode: referredBy,
+        });
+
+      if (!referrer) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid Referral Code",
+        });
+      }
+
+      
+
+    }
+
     /* CREATE USER */
 
     const user = await User.create({
@@ -205,6 +228,8 @@ exports.registerUser = async (req, res) => {
       yearOfStudy,
       githubUrl,
       linkedinUrl,
+      referredBy:
+        referredBy || null,
     });
 
     /* DELETE OTP */
@@ -231,6 +256,43 @@ exports.registerUser = async (req, res) => {
       token,
       user,
     });
+
+    if (referredBy) {
+
+      const referrer =
+        await User.findOne({
+          referralCode:
+            referredBy,
+        });
+
+      if (referrer) {
+
+        referrer.pendingReferrals += 1;
+
+        await referrer.save();
+
+        await Referral.create({
+
+          referrerId:
+            referrer._id,
+
+          referredUserId:
+            user._id,
+
+          teamName:
+            "Not Created Yet",
+
+          leaderName:
+            user.name,
+
+          status:
+            "Pending Payment",
+
+        });
+
+      }
+
+    }
 
     /* SEND EMAIL IN BACKGROUND */
 

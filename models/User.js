@@ -149,6 +149,42 @@ const userSchema =
       default: false,
     },
 
+    /* =========================
+   REFERRAL SYSTEM
+========================= */
+
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      default: null,
+    },
+
+    referredBy: {
+      type: String,
+      default: null,
+    },
+
+    successfulReferrals: {
+      type: Number,
+      default: 0,
+    },
+
+    pendingReferrals: {
+      type: Number,
+      default: 0,
+    },
+
+    rewardUnlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    goodiesUnlocked: {
+      type: Boolean,
+      default: false,
+    },
+
     paymentId: {
       type: String,
       default: null,
@@ -162,6 +198,11 @@ const userSchema =
     paidAt: {
       type: Date,
       default: null,
+    },
+
+    referralRewardProcessed: {
+      type: Boolean,
+      default: false,
     },
 
     /* =========================
@@ -214,9 +255,9 @@ const userSchema =
     },
 
   },
-  {
-    timestamps: true,
-  });
+    {
+      timestamps: true,
+    });
 
 module.exports =
   mongoose.model(

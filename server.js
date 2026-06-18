@@ -46,6 +46,9 @@ const userRoutes =
 const paymentRoutes =
   require("./routes/paymentRoutes");
 
+const referralRoutes =
+  require("./routes/referralRoutes");
+
 /* =========================
    EXPRESS APP
 ========================= */
@@ -134,6 +137,11 @@ app.use(
 app.use(
   "/api/payment",
   paymentRoutes
+);
+
+app.use(
+  "/api/referral",
+  referralRoutes
 );
 
 // FINANCE
