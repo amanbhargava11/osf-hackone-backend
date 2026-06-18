@@ -12,8 +12,8 @@ exports.getMyReferral =
         await User.findById(
           req.user.id
         ).select(
-          "referralCode successfulReferrals pendingReferrals rewardUnlocked goodiesUnlocked"
-        );
+          "referralCode successfulReferrals pendingReferrals rewardUnlocked goodiesUnlocked upiId upiName"
+        )
 
       if (!user) {
         return res.status(404).json({
@@ -30,6 +30,75 @@ exports.getMyReferral =
     } catch (err) {
 
       console.log(err);
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+
+    }
+
+  };
+
+  exports.saveRewardDetails =
+  async (req, res) => {
+
+    try {
+
+      const {
+        upiId,
+        upiName
+      } = req.body;
+
+      const user =
+        await User.findByIdAndUpdate(
+          req.user.id,
+          {
+            upiId,
+            upiName,
+          },
+          {
+            new: true,
+          }
+        );
+
+      res.status(200).json({
+        success: true,
+        data: user,
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+
+    }
+
+  };
+
+exports.updateUpiId =
+  async (req, res) => {
+
+    try {
+
+      const { upiId } =
+        req.body;
+
+      const user =
+        await User.findByIdAndUpdate(
+          req.user.id,
+          { upiId },
+          { new: true }
+        );
+
+      res.json({
+        success: true,
+        upiId: user.upiId,
+      });
+
+    } catch (err) {
 
       res.status(500).json({
         success: false,

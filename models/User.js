@@ -205,6 +205,18 @@ const userSchema =
       default: false,
     },
 
+    upiId: {
+      type: String,
+      default: "",
+    },
+
+    upiName: {
+      type: String,
+      default: "",
+    },
+
+
+
     /* =========================
        USER NOTIFICATIONS
     ========================= */

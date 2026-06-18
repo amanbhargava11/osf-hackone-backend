@@ -1,8 +1,6 @@
-const express =
-  require("express");
+const express = require("express");
 
-const router =
-  express.Router();
+const router = express.Router();
 
 const authMiddleware =
   require("../middleware/authMiddleware");
@@ -10,9 +8,9 @@ const authMiddleware =
 const {
   getMyReferral,
   generateReferralCode,
-} = require(
-  "../controllers/referralController"
-);
+  saveRewardDetails,
+  updateUpiId,
+} = require("../controllers/referralController");
 
 router.get(
   "/me",
@@ -26,5 +24,16 @@ router.post(
   generateReferralCode
 );
 
-module.exports =
-  router;
+router.post(
+  "/save-upi",
+  authMiddleware,
+  saveRewardDetails
+);
+
+router.put(
+  "/upi",
+  authMiddleware,
+  updateUpiId
+);
+
+module.exports = router;
