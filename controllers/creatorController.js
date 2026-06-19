@@ -71,3 +71,84 @@ exports.loginCreator = async (req,res)=>{
    });
  }
 }
+
+exports.getAllCreators = async (req,res)=>{
+  try{
+    const creators = await Creator.find()
+      .select("-password");
+
+    res.json({
+      success:true,
+      creators
+    });
+  }catch(err){
+    res.status(500).json({
+      success:false,
+      message:err.message
+    });
+  }
+};
+
+exports.createCreator = async (req,res)=>{
+  try{
+
+    const {
+      name,
+      email,
+      password,
+      creatorCode
+    } = req.body;
+
+    const exists =
+      await Creator.findOne({ email });
+
+    if(exists){
+      return res.status(400).json({
+        success:false,
+        message:"Creator already exists"
+      });
+    }
+
+    const hashed =
+      await bcrypt.hash(password,10);
+
+    const creator =
+      await Creator.create({
+        name,
+        email,
+        password:hashed,
+        creatorCode
+      });
+
+    res.json({
+      success:true,
+      creator
+    });
+
+  }catch(err){
+    res.status(500).json({
+      success:false,
+      message:err.message
+    });
+  }
+};
+
+exports.deleteCreator = async (req,res)=>{
+  try{
+
+    await Creator.findByIdAndDelete(
+      req.params.id
+    );
+
+    res.json({
+      success:true,
+      message:"Creator deleted"
+    });
+
+  }catch(err){
+    res.status(500).json({
+      success:false,
+      message:err.message
+    });
+  }
+};
