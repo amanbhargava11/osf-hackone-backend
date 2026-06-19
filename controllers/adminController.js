@@ -9,6 +9,178 @@ require("../utils/sendEventMail");
 const adminOtps =
 require("../utils/adminOtpStore");
 
+const Creator =
+  require("../models/Creator");
+
+const bcrypt =
+  require("bcryptjs");
+
+
+exports.createCreator =
+async (req,res)=>{
+
+ try{
+
+   const {
+     name,
+     email,
+     password,
+     creatorCode
+   } = req.body;
+
+   const existing =
+     await Creator.findOne({
+       email
+     });
+
+   if(existing){
+
+     return res.status(400).json({
+       success:false,
+       message:
+         "Creator already exists"
+     });
+
+   }
+
+   const hashedPassword =
+     await bcrypt.hash(
+       password,
+       10
+     );
+
+   const creator =
+     await Creator.create({
+
+       name,
+       email,
+
+       password:
+         hashedPassword,
+
+       creatorCode
+
+     });
+
+   res.json({
+     success:true,
+     creator
+   });
+
+ }catch(err){
+
+   res.status(500).json({
+     success:false,
+     message:err.message
+   });
+
+ }
+
+};
+
+
+exports.getAllCreators =
+async (req,res)=>{
+
+ try{
+
+   const creators =
+     await Creator.find()
+       .select("-password")
+       .sort({
+         createdAt:-1
+       });
+
+   res.json({
+     success:true,
+     creators
+   });
+
+ }catch(err){
+
+   res.status(500).json({
+     success:false,
+     message:err.message
+   });
+
+ }
+
+};
+
+
+exports.deleteCreator =
+async (req,res)=>{
+
+ try{
+
+   await Creator.findByIdAndDelete(
+     req.params.id
+   );
+
+   res.json({
+     success:true,
+     message:
+       "Creator deleted"
+   });
+
+ }catch(err){
+
+   res.status(500).json({
+     success:false,
+     message:err.message
+   });
+
+ }
+
+};
+
+
+exports.getCreatorStats =
+async (req,res)=>{
+
+ try{
+
+   const total =
+     await Creator.countDocuments();
+
+   const successful =
+     await Creator.aggregate([
+       {
+         $group:{
+           _id:null,
+           total:{
+             $sum:
+             "$successfulReferrals"
+           }
+         }
+       }
+     ]);
+
+   res.json({
+
+     success:true,
+
+     stats:{
+       totalCreators:
+         total,
+
+       totalSuccessful:
+         successful[0]?.total || 0
+     }
+
+   });
+
+ }catch(err){
+
+   res.status(500).json({
+     success:false,
+     message:err.message
+   });
+
+ }
+
+};
+
 /* =========================
 SEND ADMIN OTP
 ========================= */
