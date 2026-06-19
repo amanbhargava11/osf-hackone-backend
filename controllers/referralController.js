@@ -1,7 +1,237 @@
 const User = require("../models/User");
 
-const Team =
-  require("../models/Team");
+const Team = require("../models/Team");
+const Referral = require("../models/Referral");
+
+
+
+
+exports.getAllReferrals = async (req, res) => {
+  try {
+
+    const referrals = await Referral.find()
+      .populate(
+        "referrerId",
+        "name email referralCode upiId upiName"
+      )
+      .populate(
+        "referredUserId",
+        "name email"
+      )
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: referrals,
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+
+  }
+};
+
+exports.updateReferral =
+  async (req, res) => {
+
+    try {
+
+      const { status } = req.body;
+
+      const referral =
+        await Referral.findByIdAndUpdate(
+          req.params.id,
+          { status },
+          { new: true }
+        );
+
+      res.json({
+        success: true,
+        data: referral,
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+
+    }
+
+  };
+
+exports.getReferralStats =
+  async (req, res) => {
+
+    try {
+
+      const total =
+        await Referral.countDocuments();
+
+      const successful =
+        await Referral.countDocuments({
+          status: "Successful",
+        });
+
+      const pending =
+        await Referral.countDocuments({
+          status: "Pending Payment",
+        });
+
+      const rewardsUnlocked =
+        await User.countDocuments({
+          rewardUnlocked: true,
+        });
+
+      res.json({
+        success: true,
+        stats: {
+          total,
+          successful,
+          pending,
+          rewardsUnlocked,
+        },
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+
+    }
+
+  };
+
+exports.createReferral =
+  async (req, res) => {
+
+    try {
+
+      const referral =
+        await Referral.create(
+          req.body
+        );
+
+      res.json({
+        success: true,
+        data: referral,
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+
+    }
+
+  };
+
+exports.deleteReferral =
+  async (req, res) => {
+
+    try {
+
+      await Referral.findByIdAndDelete(
+        req.params.id
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Referral deleted",
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+
+    }
+
+  };
+
+exports.markSuccessful =
+  async (req, res) => {
+
+    try {
+
+      const referral =
+        await Referral.findById(
+          req.params.id
+        );
+
+      if (!referral) {
+        return res.status(404).json({
+          success: false,
+        });
+      }
+
+      if (referral.status === "Successful") {
+        return res.status(400).json({
+          success: false,
+          message: "Already marked successful",
+        });
+      }
+
+      referral.status =
+        "Successful";
+
+      await referral.save();
+
+      const referrer =
+        await User.findById(
+          referral.referrerId
+        );
+
+      if (referrer) {
+
+        referrer.pendingReferrals = Math.max(
+          0,
+          referrer.pendingReferrals - 1
+        );
+
+        referrer.successfulReferrals += 1;
+
+        if (
+          referrer.successfulReferrals >= 5
+        ) {
+          referrer.rewardUnlocked = true;
+        }
+
+        if (
+          referrer.successfulReferrals >= 9
+        ) {
+          referrer.goodiesUnlocked = true;
+        }
+
+        await referrer.save();
+      }
+
+      res.json({
+        success: true,
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+
+    }
+
+  };
 
 exports.getMyReferral =
   async (req, res) => {
@@ -40,7 +270,7 @@ exports.getMyReferral =
 
   };
 
-  exports.saveRewardDetails =
+exports.saveRewardDetails =
   async (req, res) => {
 
     try {
