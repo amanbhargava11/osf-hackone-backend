@@ -5,6 +5,8 @@ const router = express.Router();
 const authMiddleware =
   require("../middleware/authMiddleware");
 
+const User = require("../models/User");
+
 const {
   getMyReferral,
   generateReferralCode,
@@ -42,6 +44,8 @@ router.delete(
   deleteReferral
 );
 
+
+
 router.get(
   "/admin/all",
   authMiddleware,
@@ -76,6 +80,36 @@ router.put(
   "/upi",
   authMiddleware,
   updateUpiId
+);
+
+router.get(
+  "/cleanup-referral",
+  async (req, res) => {
+    try {
+
+      const result = await User.updateMany(
+        { referralCode: null },
+        {
+          $unset: {
+            referralCode: ""
+          }
+        }
+      );
+
+      res.json({
+        success: true,
+        result
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+
+    }
+  }
 );
 
 module.exports = router;

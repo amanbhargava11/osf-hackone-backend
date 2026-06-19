@@ -157,7 +157,7 @@ const userSchema =
       type: String,
       unique: true,
       sparse: true,
-      default: null,
+      default: undefined,
     },
 
     referredBy: {
