@@ -49,6 +49,9 @@ const paymentRoutes =
 const referralRoutes =
   require("./routes/referralRoutes");
 
+const creatorRoutes =
+  require("./routes/creatorRoutes");
+
 /* =========================
    EXPRESS APP
 ========================= */
@@ -153,6 +156,11 @@ app.use(
 app.use(
   "/uploads",
   express.static("uploads")
+);
+
+app.use(
+  "/api/creator",
+  creatorRoutes
 );
 
 /* =========================

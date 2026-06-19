@@ -16,6 +16,9 @@ const welcomeEmail =
 const Referral =
   require("../models/Referral");
 
+const Creator =
+  require("../models/Creator");
+
 /* =========================
    OTP STORE
 ========================= */
@@ -139,6 +142,7 @@ exports.registerUser = async (req, res) => {
       linkedinUrl,
       otp,
       referredBy,
+      creatorCode
     } = req.body;
 
     /* CHECK EXISTING USER */
@@ -210,11 +214,33 @@ exports.registerUser = async (req, res) => {
         });
       }
 
-      
+
+
+    }
+
+    let creator = null;
+
+    if (creatorCode) {
+
+      creator =
+        await Creator.findOne({
+          creatorCode
+        });
+
+      if (!creator) {
+
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Creator Code",
+        });
+
+      }
 
     }
 
     /* CREATE USER */
+
+
 
     const user = await User.create({
       name,
@@ -228,9 +254,15 @@ exports.registerUser = async (req, res) => {
       yearOfStudy,
       githubUrl,
       linkedinUrl,
-      referredBy:
-        referredBy || null,
+      referredBy: referredBy || null,
+
+      creatorCode:
+        creator?.creatorCode || null,
+
+      creatorId:
+        creator?._id || null,
     });
+
 
     /* DELETE OTP */
 
@@ -309,6 +341,16 @@ exports.registerUser = async (req, res) => {
         err
       );
     });
+
+    if (creator) {
+
+      creator.totalReferrals += 1;
+
+      creator.pendingReferrals += 1;
+
+      await creator.save();
+
+    }
 
 
   } catch (err) {

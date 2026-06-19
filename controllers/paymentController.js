@@ -14,6 +14,9 @@ const Team =
 const Referral =
   require("../models/Referral");
 
+const Creator =
+  require("../models/Creator");
+
 /* =========================
    CREATE ORDER
 ========================= */
@@ -126,6 +129,25 @@ const verifyPayment = async (req, res) => {
         }
       );
 
+    if (updatedUser.creatorId) {
+
+      const creator =
+        await Creator.findById(
+          updatedUser.creatorId
+        );
+
+      if (creator) {
+
+        creator.pendingReferrals -= 1;
+
+        creator.successfulReferrals += 1;
+
+        await creator.save();
+
+      }
+
+    }
+
     if (!updatedUser) {
 
       return res.status(404).json({
@@ -142,7 +164,7 @@ const verifyPayment = async (req, res) => {
 
     if (
       updatedUser.teamRole ===
-        "leader" &&
+      "leader" &&
       !updatedUser.referralCode
     ) {
 
@@ -235,6 +257,8 @@ const verifyPayment = async (req, res) => {
         true;
 
       await updatedUser.save();
+
+      
 
     }
 

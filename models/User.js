@@ -215,6 +215,17 @@ const userSchema =
       default: "",
     },
 
+    creatorCode: {
+      type: String,
+      default: null,
+    },
+
+    creatorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Creator",
+      default: null,
+    },
+
 
 
     /* =========================
