@@ -2,6 +2,24 @@ const Creator = require("../models/Creator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+exports.getCreatorDashboard = async (req, res) => {
+  try {
+    const creator = await Creator.findById(req.creator.id)
+      .select("-password");
+
+    res.json({
+      success: true,
+      creator,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 exports.loginCreator = async (req,res)=>{
  try{
 
