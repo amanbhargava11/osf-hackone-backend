@@ -82,34 +82,6 @@ router.put(
   updateUpiId
 );
 
-router.get(
-  "/cleanup-referral",
-  async (req, res) => {
-    try {
 
-      const result = await User.updateMany(
-        { referralCode: null },
-        {
-          $unset: {
-            referralCode: ""
-          }
-        }
-      );
-
-      res.json({
-        success: true,
-        result
-      });
-
-    } catch (err) {
-
-      res.status(500).json({
-        success: false,
-        message: err.message
-      });
-
-    }
-  }
-);
 
 module.exports = router;
