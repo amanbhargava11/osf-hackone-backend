@@ -45,7 +45,6 @@ router.delete(
 router.get(
   "/admin/all",
   authMiddleware,
-  adminMiddleware,
   getAllReferrals
 );
 
