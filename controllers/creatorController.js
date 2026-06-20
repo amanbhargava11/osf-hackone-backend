@@ -1,22 +1,61 @@
 const Creator = require("../models/Creator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 exports.getCreatorDashboard = async (req, res) => {
   try {
-    const creator = await Creator.findById(req.creator.id)
-      .select("-password");
+
+    const creator = await Creator.findById(
+      req.creator.id
+    ).select("-password");
+
+    if (!creator) {
+      return res.status(404).json({
+        success: false,
+        message: "Creator not found"
+      });
+    }
+
+    const referrals = await User.find({
+      creatorCode: creator.creatorCode
+    })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .select(
+        "name email isPaid createdAt"
+      );
+
+    const activities = referrals.map(
+      (user) => ({
+        _id: user._id,
+        type: user.isPaid
+          ? "reward"
+          : "registration",
+
+        title: user.isPaid
+          ? "Successful Referral"
+          : "New Registration",
+
+        message: `${user.name} registered using your creator code`,
+
+        createdAt: user.createdAt,
+      })
+    );
 
     res.json({
       success: true,
       creator,
+      activities,
     });
 
   } catch (err) {
+
     res.status(500).json({
       success: false,
       message: err.message,
     });
+
   }
 };
 
