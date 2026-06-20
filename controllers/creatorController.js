@@ -54,6 +54,8 @@ exports.getCreatorDashboard = async (req, res) => {
       }
     });
 
+    console.log(creator);
+
   } catch (err) {
 
     res.status(500).json({
