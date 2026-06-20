@@ -47,6 +47,11 @@ exports.getCreatorDashboard = async (req, res) => {
       success: true,
       creator,
       activities,
+      stats: {
+        totalReferrals: creator.totalReferrals,
+        pendingReferrals: creator.pendingReferrals,
+        successfulReferrals: creator.successfulReferrals
+      }
     });
 
   } catch (err) {
@@ -59,77 +64,77 @@ exports.getCreatorDashboard = async (req, res) => {
   }
 };
 
-exports.loginCreator = async (req,res)=>{
- try{
+exports.loginCreator = async (req, res) => {
+  try {
 
-   const { email,password } = req.body;
+    const { email, password } = req.body;
 
-   const creator =
-     await Creator.findOne({ email });
+    const creator =
+      await Creator.findOne({ email });
 
-   if(!creator){
+    if (!creator) {
       return res.status(400).json({
-        success:false,
-        message:"Creator not found"
+        success: false,
+        message: "Creator not found"
       });
-   }
+    }
 
-   const match =
-     await bcrypt.compare(
-       password,
-       creator.password
-     );
+    const match =
+      await bcrypt.compare(
+        password,
+        creator.password
+      );
 
-   if(!match){
+    if (!match) {
       return res.status(400).json({
-        success:false,
-        message:"Invalid credentials"
+        success: false,
+        message: "Invalid credentials"
       });
-   }
+    }
 
-   const token =
-     jwt.sign(
-       {
-         id: creator._id,
-         role:"creator"
-       },
-       process.env.JWT_SECRET,
-       { expiresIn:"7d" }
-     );
+    const token =
+      jwt.sign(
+        {
+          id: creator._id,
+          role: "creator"
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
 
-   res.json({
-      success:true,
+    res.json({
+      success: true,
       token,
       creator
-   });
+    });
 
- }catch(err){
-   res.status(500).json({
-      success:false,
-      message:err.message
-   });
- }
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
 }
 
-exports.getAllCreators = async (req,res)=>{
-  try{
+exports.getAllCreators = async (req, res) => {
+  try {
     const creators = await Creator.find()
       .select("-password");
 
     res.json({
-      success:true,
+      success: true,
       creators
     });
-  }catch(err){
+  } catch (err) {
     res.status(500).json({
-      success:false,
-      message:err.message
+      success: false,
+      message: err.message
     });
   }
 };
 
-exports.createCreator = async (req,res)=>{
-  try{
+exports.createCreator = async (req, res) => {
+  try {
 
     const {
       name,
@@ -141,53 +146,53 @@ exports.createCreator = async (req,res)=>{
     const exists =
       await Creator.findOne({ email });
 
-    if(exists){
+    if (exists) {
       return res.status(400).json({
-        success:false,
-        message:"Creator already exists"
+        success: false,
+        message: "Creator already exists"
       });
     }
 
     const hashed =
-      await bcrypt.hash(password,10);
+      await bcrypt.hash(password, 10);
 
     const creator =
       await Creator.create({
         name,
         email,
-        password:hashed,
+        password: hashed,
         creatorCode
       });
 
     res.json({
-      success:true,
+      success: true,
       creator
     });
 
-  }catch(err){
+  } catch (err) {
     res.status(500).json({
-      success:false,
-      message:err.message
+      success: false,
+      message: err.message
     });
   }
 };
 
-exports.deleteCreator = async (req,res)=>{
-  try{
+exports.deleteCreator = async (req, res) => {
+  try {
 
     await Creator.findByIdAndDelete(
       req.params.id
     );
 
     res.json({
-      success:true,
-      message:"Creator deleted"
+      success: true,
+      message: "Creator deleted"
     });
 
-  }catch(err){
+  } catch (err) {
     res.status(500).json({
-      success:false,
-      message:err.message
+      success: false,
+      message: err.message
     });
   }
 };
