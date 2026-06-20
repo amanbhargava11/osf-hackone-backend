@@ -181,6 +181,43 @@ async (req,res)=>{
 
 };
 
+exports.updateCreator = async (req, res) => {
+  try {
+    const { name, email, creatorCode } = req.body;
+
+    const creator = await Creator.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        email,
+        creatorCode,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password");
+
+    if (!creator) {
+      return res.status(404).json({
+        success: false,
+        message: "Creator not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Creator updated successfully",
+      creator,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 /* =========================
 SEND ADMIN OTP
 ========================= */

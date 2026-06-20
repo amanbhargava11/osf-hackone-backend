@@ -52,6 +52,11 @@ router.delete(
   deleteCreator
 );
 
+router.put(
+  "/creators/:id",
+  adminController.updateCreator
+);
+
 router.get(
   "/creator/stats",
   getCreatorStats
