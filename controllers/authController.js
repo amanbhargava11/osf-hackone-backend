@@ -201,21 +201,26 @@ exports.registerUser = async (req, res) => {
 
     if (referredBy) {
 
-      const referrer =
+      const userReferrer =
         await User.findOne({
           referralCode: referredBy,
         });
 
-      if (!referrer) {
+      const creatorReferrer =
+        await Creator.findOne({
+          creatorCode: referredBy,
+        });
+
+      if (!userReferrer && !creatorReferrer) {
         return res.status(400).json({
           success: false,
-          message:
-            "Invalid Referral Code",
+          message: "Invalid Referral Code",
         });
       }
 
-
-
+      if (creatorReferrer) {
+        creator = creatorReferrer;
+      }
     }
 
     let creator = null;
