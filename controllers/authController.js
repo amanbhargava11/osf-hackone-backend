@@ -145,6 +145,8 @@ exports.registerUser = async (req, res) => {
       creatorCode
     } = req.body;
 
+    let creator = null;
+
     /* CHECK EXISTING USER */
 
     const existingUser = await User.findOne({
@@ -201,6 +203,8 @@ exports.registerUser = async (req, res) => {
 
     if (referredBy) {
 
+      console.log("REFERRED CODE:", referredBy);
+
       const userReferrer =
         await User.findOne({
           referralCode: referredBy,
@@ -210,6 +214,9 @@ exports.registerUser = async (req, res) => {
         await Creator.findOne({
           creatorCode: referredBy,
         });
+
+      console.log("USER REFERRER:", userReferrer);
+      console.log("CREATOR REFERRER:", creatorReferrer);
 
       if (!userReferrer && !creatorReferrer) {
         return res.status(400).json({
@@ -223,7 +230,7 @@ exports.registerUser = async (req, res) => {
       }
     }
 
-    let creator = null;
+
 
     if (creatorCode) {
 
@@ -296,40 +303,31 @@ exports.registerUser = async (req, res) => {
 
     if (referredBy) {
 
-      const referrer =
+      const userReferrer =
         await User.findOne({
-          referralCode:
-            referredBy,
+          referralCode: referredBy.trim(),
         });
 
-      if (referrer) {
-
-        referrer.pendingReferrals += 1;
-
-        await referrer.save();
-
-        await Referral.create({
-
-          referrerId:
-            referrer._id,
-
-          referredUserId:
-            user._id,
-
-          teamName:
-            "Not Created Yet",
-
-          leaderName:
-            user.name,
-
-          status:
-            "Pending Payment",
-
+      const creatorReferrer =
+        await Creator.findOne({
+          creatorCode: referredBy.trim(),
         });
 
+      if (!userReferrer && !creatorReferrer) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Referral Code",
+        });
       }
 
+      if (creatorReferrer) {
+        creator = creatorReferrer;
+      }
     }
+
+    console.log("BODY:", req.body);
+    console.log("REFERRED:", referredBy);
+    console.log("CREATOR:", creatorCode);
 
     /* SEND EMAIL IN BACKGROUND */
 
