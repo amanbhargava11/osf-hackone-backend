@@ -8,15 +8,12 @@ const {
   sendAdminOTP,
   verifyAdminOTP,
   sendBulkMail,
-
   createCreator,
   getAllCreators,
   deleteCreator,
   getCreatorStats,
-
-} = require(
-  "../controllers/adminController"
-);
+  updateCreator,
+} = require("../controllers/adminController");
 
 router.post(
   "/send-admin-otp",
