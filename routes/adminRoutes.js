@@ -51,7 +51,7 @@ router.delete(
 
 router.put(
   "/creators/:id",
-  adminController.updateCreator
+  updateCreator
 );
 
 router.get(
