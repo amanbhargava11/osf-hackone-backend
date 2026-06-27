@@ -186,7 +186,7 @@ app.use(
   creatorRoutes
 );
 
-app.use("/judge-api", judgeModule);
+app.use("/judgeapi", judgeModule);
 
 /* =========================
    HEALTH CHECK
