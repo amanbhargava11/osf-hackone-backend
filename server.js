@@ -52,6 +52,14 @@ const referralRoutes =
 const creatorRoutes =
   require("./routes/creatorRoutes");
 
+
+/* =========================
+   Judge/Mentor/AdminJudge
+========================= */
+
+const judgeModule = require("./modules/judge");
+
+
 /* =========================
    EXPRESS APP
 ========================= */
@@ -162,6 +170,8 @@ app.use(
   "/api/creator",
   creatorRoutes
 );
+
+app.use("/judge-api", judgeModule);
 
 /* =========================
    HEALTH CHECK
