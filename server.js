@@ -139,18 +139,23 @@
 // ================================
 // Start Server
 // ================================
-const express = require("express");
-const app = express();
+const http = require("http");
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Backend Working"
+const PORT = process.env.PORT || 8080;
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "application/json",
   });
+
+  res.end(
+    JSON.stringify({
+      success: true,
+      message: "HTTP Server Working",
+    })
+  );
 });
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Running on", PORT);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log("HTTP Server running on", PORT);
 });
