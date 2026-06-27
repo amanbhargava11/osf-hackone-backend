@@ -70,23 +70,7 @@ const app = express();
    MIDDLEWARE
 ========================= */
 
-/* =========================
-   MIDDLEWARE
-========================= */
-
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "https://osfhackathon.in",
-      "https://www.osfhackathon.in",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors());
 
 app.use(express.json());
 
@@ -95,6 +79,7 @@ app.use(
     extended: true,
   })
 );
+
 /* =========================
    API ROUTES
 ========================= */
@@ -200,6 +185,13 @@ app.get("/", (req, res) => {
       "OSF HackOne Backend Running 🚀",
   });
 
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is alive",
+  });
 });
 
 /* =========================
